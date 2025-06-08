@@ -170,7 +170,7 @@ const Header = () => {
           <button className="text-gray-600 hover:text-[#C14524] transition-colors">
             <User size={20} />
           </button>
-          <Link href="/Authentification">
+          <Link href="/login">
             <button className="bg-[#C14524] text-white px-4 py-2 rounded-md hover:bg-[#a73a1e] transition-colors cursor-pointer">
               Démarrer
             </button>

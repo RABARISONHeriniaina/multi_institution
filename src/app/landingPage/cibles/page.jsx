@@ -3,7 +3,11 @@ import Button from "@/src/components/ui/Button";
 import SectionTitle from "@/src/components/ui/SectionTitle";
 import { motion } from "framer-motion";
 import { Check } from "lucide-react";
+import { useRouter } from 'next/navigation';
 const Cibles = () => {
+
+  const router = useRouter();
+
   const fadeIn = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0 },
@@ -148,7 +152,7 @@ const Cibles = () => {
           </div>
 
           <motion.div variants={fadeIn} className="text-center mt-12">
-            <Button primary>Choisissez votre profil et lancez-vous</Button>
+            <Button onClick={() => router.push("/institutions")} primary>Choisissez votre profil et lancez-vous</Button>
           </motion.div>
         </motion.div>
       </div>

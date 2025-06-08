@@ -6,7 +6,12 @@ import SectionTitle from "@/src/components/ui/SectionTitle";
 import { motion } from "framer-motion";
 import { Check } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from 'next/navigation';
+
 const Hero = () => {
+
+  const router = useRouter();
+
   const fadeIn = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0 },
@@ -21,6 +26,11 @@ const Hero = () => {
       },
     },
   };
+
+  const registerInstitution = () => {
+    router.push("/institutions/register");
+  };
+
   return (
     <>
       <section
@@ -61,7 +71,7 @@ const Hero = () => {
                 variants={fadeIn}
                 className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4"
               >
-                <Button primary>Créer votre espace</Button>
+                <Button onClick={registerInstitution} primary>Créer votre espace</Button>
                 <Button>Demander une démonstration</Button>
               </motion.div>
             </div>
