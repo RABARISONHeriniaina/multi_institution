@@ -7,8 +7,10 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useRouter } from 'next/navigation';
 
+
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2, Mail, Lock, Eye, EyeOff, Building2, ArrowRight, KeyRound, GraduationCap } from 'lucide-react'
+import { useIsAuthenticated } from '@/hooks/use-is-authenticated'
 
 interface LoginFormData {
   email: string
@@ -20,6 +22,7 @@ interface FormErrors {
 }
 
 export default function LoginForm() {
+
   const [formData, setFormData] = useState<LoginFormData>({
     email: '',
     password: ''
@@ -73,20 +76,31 @@ export default function LoginForm() {
     setErrors({})
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      
-      console.log('Login attempt:', formData)
-      
-      if (formData.email === 'admin@test.com' && formData.password === 'password') {
-        alert('Connexion réussie!')
-      } else {
-        setErrors({ submit: 'Email ou mot de passe incorrect' })
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        setErrors({ submit: errorData.message || 'Identifiants invalides' })
+        return
       }
+
+      const { token, refresh_token } = await response.json()
+
+      router.push('/dashboard')
+
     } catch (error) {
       setErrors({ submit: 'Erreur de connexion. Veuillez réessayer.' })
     } finally {
       setIsLoading(false)
-    }
+  }
+
+
   }
 
   const handleForgotPassword = async () => {

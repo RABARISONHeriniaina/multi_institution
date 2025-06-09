@@ -11,9 +11,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Calendar } from '@/components/ui/calendar'
+import { Textarea } from '@/components/ui/textarea'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
-import { Loader2, UserPlus, User, Lock, ChevronRight, ChevronLeft, Check, Calendar as CalendarIcon } from 'lucide-react'
+import { Loader2, UserPlus, User, Lock, ChevronRight, ChevronLeft, Check, Calendar as CalendarIcon, MapPin } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface StudentFormData {
@@ -25,6 +26,13 @@ interface StudentFormData {
   gender: string
   dateOfBirth: Date | undefined
   phoneNumber: string
+  // Address fields
+  address: {
+    street: string
+    city: string
+    postalCode: string
+    country: string
+  }
 }
 
 interface FormErrors {
@@ -56,7 +64,8 @@ interface Institution {
 
 const STEPS = [
   { id: 1, title: 'Informations Personnelles', icon: User },
-  { id: 2, title: 'Compte et Finalisation', icon: Lock }
+  { id: 2, title: 'Adresse et Localisation', icon: MapPin },
+  { id: 3, title: 'Compte et Finalisation', icon: Lock }
 ]
 
 export default function StudentRegistrationPage() {
@@ -77,7 +86,13 @@ export default function StudentRegistrationPage() {
     confirmPassword: '',
     gender: '',
     dateOfBirth: undefined,
-    phoneNumber: ''
+    phoneNumber: '',
+    address: {
+      street: '',
+      city: '',
+      postalCode: '',
+      country: 'Madagascar'
+    }
   })
 
   // Fetch institution data
@@ -91,6 +106,7 @@ export default function StudentRegistrationPage() {
           setInstitution(institutionData)
         } else {
           // Fallback if API doesn't exist yet
+          router.push('/institutions');
           setInstitution({ 
             id: institutionId, 
             name: `Institution ${institutionId}`,
@@ -113,6 +129,7 @@ export default function StudentRegistrationPage() {
           })
         }
       } catch (error) {
+        router.push('/institutions');
         console.error('Failed to fetch institution:', error)
         setInstitution({ 
           id: institutionId, 
@@ -140,10 +157,20 @@ export default function StudentRegistrationPage() {
     }
 
     fetchInstitution()
+
   }, [institutionId])
 
-  const handleInputChange = (field: keyof StudentFormData, value: string | Date | undefined) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
+  const handleInputChange = (field: keyof StudentFormData | string, value: string | Date | undefined) => {
+    if (field.startsWith('address.')) {
+      const addressField = field.split('.')[1] as keyof StudentFormData['address']
+      setFormData(prev => ({ 
+        ...prev, 
+        address: { ...prev.address, [addressField]: value }
+      }))
+    } else {
+      setFormData(prev => ({ ...prev, [field]: value }))
+    }
+    
     // Clear field-specific error when user starts typing
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }))
@@ -178,6 +205,16 @@ export default function StudentRegistrationPage() {
         }
         break
       case 2:
+        const step2Fields = ['address.street', 'address.city', 'address.postalCode', 'address.country']
+        for (const field of step2Fields) {
+          const addressField = field.split('.')[1] as keyof StudentFormData['address']
+          if (!formData.address[addressField]) {
+            newErrors[field] = `${getFieldLabel(field)} est requis`
+            isValid = false
+          }
+        }
+        break
+      case 3:
         if (!formData.password) {
           newErrors.password = 'Le mot de passe est requis'
           isValid = false
@@ -208,7 +245,11 @@ export default function StudentRegistrationPage() {
       gender: 'Sexe',
       dateOfBirth: 'Date de naissance',
       password: 'Mot de passe',
-      confirmPassword: 'Confirmation du mot de passe'
+      confirmPassword: 'Confirmation du mot de passe',
+      'address.street': 'Adresse complète',
+      'address.city': 'Ville',
+      'address.postalCode': 'Code postal',
+      'address.country': 'Pays'
     }
     return labels[field] || field
   }
@@ -225,7 +266,7 @@ export default function StudentRegistrationPage() {
   }
 
   const handleSubmit = async () => {
-    if (!validateStep(2)) return
+    if (!validateStep(3)) return
 
     setIsLoading(true)
     setErrors({})
@@ -233,20 +274,32 @@ export default function StudentRegistrationPage() {
     try {
       const { confirmPassword, ...submitData } = formData
       
-      // Convert date to string format for API
-      const apiData = {
-        ...submitData,
-        dateOfBirth: formData.dateOfBirth ? format(formData.dateOfBirth, 'yyyy-MM-dd') : '',
-        institutionId: institutionId // Add institution ID to the payload
+      // Create FormData for multipart/form-data
+      const formDataToSend = new FormData()
+      
+      // Add basic form fields to FormData
+      formDataToSend.append('firstName', submitData.firstName)
+      formDataToSend.append('lastName', submitData.lastName)
+      formDataToSend.append('email', submitData.email)
+      formDataToSend.append('password', submitData.password)
+      formDataToSend.append('gender', submitData.gender)
+      formDataToSend.append('phoneNumber', submitData.phoneNumber)
+      
+      if (submitData.dateOfBirth instanceof Date) {
+        formDataToSend.append('dateOfBirth', format(submitData.dateOfBirth, 'yyyy-MM-dd'))
       }
       
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/student`, {
+      formDataToSend.append('address[street]', submitData.address.street)
+      formDataToSend.append('address[city]', submitData.address.city)
+      formDataToSend.append('address[postalCode]', submitData.address.postalCode)
+      formDataToSend.append('address[country]', submitData.address.country)
+      
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/students`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           'X-Institution-ID': institutionId
         },
-        body: JSON.stringify(apiData)
+        body: formDataToSend
       })
 
       if (!response.ok) {
@@ -256,9 +309,16 @@ export default function StudentRegistrationPage() {
 
       const result = await response.json()
       
-      toast.success('Étudiant enregistré avec succès!', {
-        description: `Inscription réussie pour ${formData.firstName} ${formData.lastName}`
+      toast(`Inscription réussie pour ${formData.firstName} ${formData.lastName}.\n Connectez-vous maintenant`, {
+        icon: '👏',
+        style: {
+          borderRadius: '10px',
+          background: '#008000',
+          color: '#fff'
+        }
       })
+
+      router.push(`/login`);
 
       // Reset form
       setFormData({
@@ -269,7 +329,13 @@ export default function StudentRegistrationPage() {
         confirmPassword: '',
         gender: '',
         dateOfBirth: undefined,
-        phoneNumber: ''
+        phoneNumber: '',
+        address: {
+          street: '',
+          city: '',
+          postalCode: '',
+          country: 'Madagascar'
+        }
       })
       setCurrentStep(1)
       setErrors({})
@@ -398,6 +464,64 @@ export default function StudentRegistrationPage() {
         return (
           <div className="space-y-4">
             <div className="space-y-2">
+              <Label htmlFor="street">Adresse complète *</Label>
+              <Textarea
+                id="street"
+                value={formData.address.street}
+                onChange={(e) => handleInputChange('address.street', e.target.value)}
+                placeholder="Lot II M 42 Ter, Ankatso, Antananarivo 101"
+                className={`transition-all focus:ring-2 focus:ring-primary/20 min-h-[80px] ${errors['address.street'] ? 'border-red-500 focus:border-red-500' : ''}`}
+              />
+              {errors['address.street'] && <p className="text-sm text-red-500">{errors['address.street']}</p>}
+              <p className="text-xs text-muted-foreground">
+                Remplissez les informations ci-dessous - Incluez le numéro, la rue, le quartier
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="city">Ville *</Label>
+                <Input
+                  id="city"
+                  value={formData.address.city}
+                  onChange={(e) => handleInputChange('address.city', e.target.value)}
+                  placeholder="Antananarivo"
+                  className={`transition-all focus:ring-2 focus:ring-primary/20 ${errors['address.city'] ? 'border-red-500 focus:border-red-500' : ''}`}
+                />
+                {errors['address.city'] && <p className="text-sm text-red-500">{errors['address.city']}</p>}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="postalCode">Code postal *</Label>
+                <Input
+                  id="postalCode"
+                  value={formData.address.postalCode}
+                  onChange={(e) => handleInputChange('address.postalCode', e.target.value)}
+                  placeholder="101"
+                  className={`transition-all focus:ring-2 focus:ring-primary/20 ${errors['address.postalCode'] ? 'border-red-500 focus:border-red-500' : ''}`}
+                />
+                {errors['address.postalCode'] && <p className="text-sm text-red-500">{errors['address.postalCode']}</p>}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="country">Pays *</Label>
+              <Input
+                id="country"
+                value={formData.address.country}
+                onChange={(e) => handleInputChange('address.country', e.target.value)}
+                placeholder="Madagascar"
+                className={`transition-all focus:ring-2 focus:ring-primary/20 ${errors['address.country'] ? 'border-red-500 focus:border-red-500' : ''}`}
+              />
+              {errors['address.country'] && <p className="text-sm text-red-500">{errors['address.country']}</p>}
+            </div>
+          </div>
+        )
+
+      case 3:
+        return (
+          <div className="space-y-4">
+            <div className="space-y-2">
               <Label htmlFor="password">Mot de passe *</Label>
               <Input
                 id="password"
@@ -473,7 +597,7 @@ export default function StudentRegistrationPage() {
 
           <h1 className="mb-2 text-3xl font-bold text-foreground">Inscription Étudiant</h1>
           <p className="text-muted-foreground">
-            Enregistrez-vous au sein de l'établissement : <strong style={{ color: institution?.brandColor || 'inherit' }}>{institution?.name}</strong>
+            Enregistrez-vous au sein de l'établissement : <strong className='text-primary'>{institution?.name}</strong>
           </p>
           
           {/* Institution Details */}
@@ -495,7 +619,7 @@ export default function StudentRegistrationPage() {
 
         {/* Stepper */}
         <div className="mb-8">
-          <div className="flex items-center justify-center max-w-md mx-auto">
+          <div className="flex items-center justify-center max-w-2xl mx-auto">
             {STEPS.map((step, index) => {
               const StepIcon = step.icon
               const isActive = currentStep === step.id
@@ -511,10 +635,6 @@ export default function StudentRegistrationPage() {
                           isCompleted ? 'border-green-500 bg-green-500 text-white' : 
                           'border-muted-foreground/30 bg-background text-muted-foreground'}
                       `}
-                      style={isActive && institution?.brandColor ? { 
-                        borderColor: institution.brandColor, 
-                        backgroundColor: institution.brandColor 
-                      } : {}}
                     >
                       {isCompleted ? (
                         <Check className="h-6 w-6" />
@@ -525,13 +645,13 @@ export default function StudentRegistrationPage() {
                     <span className={`mt-2 text-sm font-medium text-center max-w-[120px] leading-tight ${
                       isActive ? 'text-primary' : isCompleted ? 'text-green-600' : 'text-muted-foreground'
                     }`}
-                    style={isActive && institution?.brandColor ? { color: institution.brandColor } : {}}>
+                   >
                       {step.title}
                     </span>
                   </div>
                   
                   {index < STEPS.length - 1 && (
-                    <div className={`h-px w-24 mx-6 transition-colors duration-200 ${
+                    <div className={`h-px w-20 mx-4 transition-colors duration-200 ${
                       currentStep > step.id ? 'bg-green-500' : 'bg-muted-foreground/30'
                     }`} />
                   )}
@@ -573,9 +693,6 @@ export default function StudentRegistrationPage() {
                   type="button"
                   onClick={nextStep}
                   className="flex items-center gap-2 bg-gradient-to-r from-primary to-primary/90 px-6 py-2.5"
-                  style={institution?.brandColor ? {
-                    background: `linear-gradient(to right, ${institution.brandColor}, ${institution.brandColor}90)`
-                  } : {}}
                 >
                   Suivant
                   <ChevronRight className="h-4 w-4" />
