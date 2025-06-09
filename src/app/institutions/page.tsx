@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -10,32 +10,80 @@ import Link from "next/link"
 export default function Institutions() {
   const [institutions, setInstitutions] = useState([])
   const [loading, setLoading] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState(null)
+  const [page, setPage] = useState(1)
+  const [hasMore, setHasMore] = useState(true)
+  const [totalCount, setTotalCount] = useState(0)
+  
+  // Refs for infinite scroll
+  const observer = useRef()
+  const lastInstitutionElementRef = useCallback(node => {
+    if (loadingMore) return
+    if (observer.current) observer.current.disconnect()
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasMore) {
+        setPage(prevPage => prevPage + 1)
+      }
+    })
+    if (node) observer.current.observe(node)
+  }, [loadingMore, hasMore])
 
-  useEffect(() => {
-    const fetchInstitutions = async () => {
-      try {
+  const fetchInstitutions = async (pageNumber = 1, append = false) => {
+    try {
+      if (pageNumber === 1) {
         setLoading(true)
         setError(null)
-        
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/institutions`)
-        
-        if (!response.ok) {
-          throw new Error(`Failed to fetch institutions: ${response.status}`)
-        }
-        
-        const data = await response.json()
-        setInstitutions(data)
-      } catch (err) {
-        console.error('Error fetching institutions:', err)
-        setError(err.message)
-      } finally {
-        setLoading(false)
+      } else {
+        setLoadingMore(true)
       }
+      
+      // Use API Platform standard pagination parameters
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/institutions?page=${pageNumber}&itemsPerPage=9`
+      )
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch institutions: ${response.status}`)
+      }
+      
+      const data = await response.json()
+      
+      // Direct array response - data is the institutions array
+      const newInstitutions = Array.isArray(data) ? data : []
+      
+      if (append) {
+        setInstitutions(prev => [...prev, ...newInstitutions])
+      } else {
+        setInstitutions(newInstitutions)
+        // For first load, update total count
+        setTotalCount(prev => prev + newInstitutions.length)
+      }
+      
+      // Check if there are more pages based on returned data
+      // If we got fewer items than requested, we've reached the end
+      setHasMore(newInstitutions.length === 9)
+      
+    } catch (err) {
+      console.error('Error fetching institutions:', err)
+      setError(err.message)
+    } finally {
+      setLoading(false)
+      setLoadingMore(false)
     }
+  }
 
-    fetchInstitutions()
+  // Initial load
+  useEffect(() => {
+    fetchInstitutions(1, false)
   }, [])
+
+  // Load more when page changes
+  useEffect(() => {
+    if (page > 1) {
+      fetchInstitutions(page, true)
+    }
+  }, [page])
 
   // Format address for display
   const formatAddress = (address) => {
@@ -82,7 +130,11 @@ export default function Institutions() {
           </p>
           <p className="text-sm text-red-500 mb-4">{error}</p>
           <Button 
-            onClick={() => window.location.reload()} 
+            onClick={() => {
+              setPage(1)
+              setHasMore(true)
+              fetchInstitutions(1, false)
+            }} 
             variant="outline"
             className="w-full"
           >
@@ -106,7 +158,9 @@ export default function Institutions() {
           <div className="flex flex-wrap justify-center gap-6 mb-8">
             <div className="flex items-center space-x-2 bg-card rounded-lg px-4 py-2 shadow-sm border border-border">
               <Users className="h-5 w-5 text-primary" />
-              <span className="font-semibold text-foreground">{institutions.length}+ Écoles partenaires</span>
+              <span className="font-semibold text-foreground">
+                {totalCount ? `${totalCount.toLocaleString()}+` : `${institutions.length}+`} Écoles partenaires
+              </span>
             </div>
             <div className="flex items-center space-x-2 bg-card rounded-lg px-4 py-2 shadow-sm border border-border">
               <GraduationCap className="h-5 w-5 text-green-600" />
@@ -132,76 +186,98 @@ export default function Institutions() {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {institutions.map((institution) => (
-                <Card
-                  key={institution.id}
-                  className="group py-0 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-border shadow-sm bg-card"
-                >
-                  <CardHeader className="p-0">
-                    <div className="relative overflow-hidden rounded-t-lg">
-                      <img
-                        src={institution.logo || "/placeholder.svg"}
-                        alt={institution.name}
-                        className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-                        onError={(e) => {
-                          e.target.src = "https://images.unsplash.com/photo-1562774053-701939374585?w=300&h=200&fit=crop&crop=entropy&auto=format"
-                        }}
-                      />
-                      <div className="absolute top-4 right-4 flex space-x-2">
-                        <div className="flex items-center space-x-1 bg-background/90 rounded-full px-2 py-1">
-                          <Star className="h-3 w-3 text-yellow-500 fill-current" />
-                          <span className="text-xs font-medium text-foreground">{getRandomRating()}</span>
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {institutions.map((institution, index) => (
+                  <Card
+                    key={`${institution.id}-${index}`}
+                    ref={index === institutions.length - 1 ? lastInstitutionElementRef : null}
+                    className="group py-0 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-border shadow-sm bg-card"
+                  >
+                    <CardHeader className="p-0">
+                      <div className="relative overflow-hidden rounded-t-lg">
+                        <img
+                          src={institution.logo || "/placeholder.svg"}
+                          alt={institution.name}
+                          className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                          onError={(e) => {
+                            e.target.src = "https://images.unsplash.com/photo-1562774053-701939374585?w=300&h=200&fit=crop&crop=entropy&auto=format"
+                          }}
+                        />
+                        <div className="absolute top-4 right-4 flex space-x-2">
+                          <div className="flex items-center space-x-1 bg-background/90 rounded-full px-2 py-1">
+                            <Star className="h-3 w-3 text-yellow-500 fill-current" />
+                            <span className="text-xs font-medium text-foreground">{getRandomRating()}</span>
+                          </div>
+                        </div>
+                        {institution.brandColor && (
+                          <div 
+                            className="absolute bottom-0 left-0 right-0 h-1"
+                            style={{ backgroundColor: institution.brandColor }}
+                          />
+                        )}
+                      </div>
+                      <div className="pt-2 pl-3">
+                        <CardTitle className="text-xl mb-2 text-foreground">{institution.name}</CardTitle>
+                        <div className="flex items-center text-sm text-muted-foreground">
+                          <MapPin className="h-4 w-4 mr-1" />
+                          {formatAddress(institution.address)}
                         </div>
                       </div>
-                      {institution.brandColor && (
-                        <div 
-                          className="absolute bottom-0 left-0 right-0 h-1"
-                          style={{ backgroundColor: institution.brandColor }}
-                        />
-                      )}
-                    </div>
-                    <div className="pt-2 pl-3">
-                      <CardTitle className="text-xl mb-2 text-foreground">{institution.name}</CardTitle>
-                      <div className="flex items-center text-sm text-muted-foreground">
-                        <MapPin className="h-4 w-4 mr-1" />
-                        {formatAddress(institution.address)}
+                    </CardHeader>
+                    <CardContent className="px-3 pb-3">
+                      <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+                        {institution.description || "Une institution d'excellence dédiée à la formation de qualité."}
+                      </p>
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center text-sm">
+                          <Users className="h-4 w-4 mr-1 text-primary" />
+                          <span className="font-semibold text-foreground">{getRandomStudentCount().toLocaleString()}</span>
+                          <span className="text-muted-foreground ml-1">étudiants</span>
+                        </div>
+                        {institution.website && (
+                          <a 
+                            href={institution.website} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-xs text-primary hover:underline"
+                          >
+                            Site web
+                          </a>
+                        )}
                       </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="px-3 pb-3">
-                    <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-                      {institution.description || "Une institution d'excellence dédiée à la formation de qualité."}
-                    </p>
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center text-sm">
-                        <Users className="h-4 w-4 mr-1 text-primary" />
-                        <span className="font-semibold text-foreground">{getRandomStudentCount().toLocaleString()}</span>
-                        <span className="text-muted-foreground ml-1">étudiants</span>
+                      <div className="flex items-center text-xs text-muted-foreground mb-4">
+                        <span>Créé le {new Date(institution.createdAt).toLocaleDateString('fr-FR')}</span>
                       </div>
-                      {institution.website && (
-                        <a 
-                          href={institution.website} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-xs text-primary hover:underline"
-                        >
-                          Site web
-                        </a>
-                      )}
-                    </div>
-                    <div className="flex items-center text-xs text-muted-foreground mb-4">
-                      <span>Créé le {new Date(institution.createdAt).toLocaleDateString('fr-FR')}</span>
-                    </div>
-                    <Link href={`/institutions/${institution.id}/register`} className="w-full">
-                      <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground group-hover:bg-primary/90 transition-colors">
-                        S'inscrire à {institution.name}
-                      </Button>
-                    </Link>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                      <Link href={`/institutions/${institution.id}/register`} className="w-full">
+                        <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground group-hover:bg-primary/90 transition-colors">
+                          S'inscrire à {institution.name}
+                        </Button>
+                      </Link>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+              
+              {/* Loading indicator for infinite scroll */}
+              {loadingMore && (
+                <div className="flex justify-center mt-8">
+                  <div className="text-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-2" />
+                    <p className="text-sm text-muted-foreground">Chargement d'autres établissements...</p>
+                  </div>
+                </div>
+              )}
+              
+              {/* End of results indicator */}
+              {!hasMore && institutions.length > 0 && (
+                <div className="text-center mt-8 py-4">
+                  <p className="text-sm text-muted-foreground">
+                    Vous avez vu tous les établissements disponibles ({institutions.length} au total)
+                  </p>
+                </div>
+              )}
+            </>
           )}
         </div>
       </section>

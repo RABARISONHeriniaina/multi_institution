@@ -16,18 +16,17 @@ interface InstitutionFormData {
   name: string
   description: string
   website: string
-  address: string
-  city: string
-  state: string
-  postalCode: string
-  country: string
   logo: File | null
   logoPreview: string
   brandColor: string
-  contactPersonName: string
-  contactPersonFirstName: string
-  contactPersonEmail: string
-  contactPersonPhone: string
+  'account[firstName]': string
+  'account[lastName]': string
+  'account[email]': string
+  'account[phoneNumber]': string
+  'address[address]': string
+  'address[city]': string
+  'address[zipCode]': string
+  'address[country]': string
 }
 
 interface FormErrors {
@@ -50,18 +49,17 @@ export default function InstitutionRegistrationPage() {
     name: '',
     description: '',
     website: '',
-    address: '',
-    city: '',
-    state: '',
-    postalCode: '',
-    country: 'Madagascar',
     logo: null,
     logoPreview: '',
     brandColor: '',
-    contactPersonName: '',
-    contactPersonFirstName: '',
-    contactPersonEmail: '',
-    contactPersonPhone: ''
+    'account[firstName]': '',
+    'account[lastName]': '',
+    'account[email]': '',
+    'account[phoneNumber]': '',
+    'address[address]': '',
+    'address[city]': '',
+    'address[zipCode]': '',
+    'address[country]': 'Madagascar'
   })
 
   const handleInputChange = (field: keyof InstitutionFormData, value: string) => {
@@ -112,32 +110,32 @@ export default function InstitutionRegistrationPage() {
         }
         break
       case 2:
-        if (!formData.contactPersonName.trim()) {
-          newErrors.contactPersonName = 'Le nom de l\'administrateur est requis'
+        if (!formData['account[lastName]'].trim()) {
+          newErrors['account[lastName]'] = 'Le nom de l\'administrateur est requis'
           isValid = false
         }
-        if (!formData.contactPersonFirstName.trim()) {
-          newErrors.contactPersonFirstName = 'Le prénom de l\'administrateur est requis'
+        if (!formData['account[firstName]'].trim()) {
+          newErrors['account[firstName]'] = 'Le prénom de l\'administrateur est requis'
           isValid = false
         }
-        if (!formData.contactPersonEmail.trim()) {
-          newErrors.contactPersonEmail = 'L\'email de connexion est requis'
+        if (!formData['account[email]'].trim()) {
+          newErrors['account[email]'] = 'L\'email de connexion est requis'
           isValid = false
         } else {
           const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-          if (!emailRegex.test(formData.contactPersonEmail)) {
-            newErrors.contactPersonEmail = 'Veuillez entrer une adresse email valide'
+          if (!emailRegex.test(formData['account[email]'])) {
+            newErrors['account[email]'] = 'Veuillez entrer une adresse email valide'
             isValid = false
           }
         }
         break
       case 3:
-        if (!formData.address.trim()) {
-          newErrors.address = 'L\'adresse est requise'
+        if (!formData['address[address]'].trim()) {
+          newErrors['address[address]'] = 'L\'adresse est requise'
           isValid = false
         }
-        if (!formData.city.trim()) {
-          newErrors.city = 'La ville est requise'
+        if (!formData['address[city]'].trim()) {
+          newErrors['address[city]'] = 'La ville est requise'
           isValid = false
         }
         break
@@ -165,12 +163,32 @@ export default function InstitutionRegistrationPage() {
     setErrors({})
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/institutions`, {
+      // Create FormData object for multipart/form-data
+      const formDataToSend = new FormData()
+      
+      // Add text fields
+      formDataToSend.append('name', formData.name)
+      formDataToSend.append('description', formData.description)
+      formDataToSend.append('website', formData.website)
+      formDataToSend.append('brandColor', formData.brandColor)
+      formDataToSend.append('account[firstName]', formData['account[firstName]'])
+      formDataToSend.append('account[lastName]', formData['account[lastName]'])
+      formDataToSend.append('account[email]', formData['account[email]'])
+      formDataToSend.append('account[phoneNumber]', formData['account[phoneNumber]'])
+      formDataToSend.append('address[address]', formData['address[address]'])
+      formDataToSend.append('address[city]', formData['address[city]'])
+      formDataToSend.append('address[zipCode]', formData['address[zipCode]'])
+      formDataToSend.append('address[country]', formData['address[country]'])
+      
+      // Add logo file if present
+      if (formData.logo) {
+        formDataToSend.append('logo', formData.logo)
+      }
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/institutions`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formData)
+        // Don't set Content-Type header - let the browser set it automatically for FormData
+        body: formDataToSend
       })
 
       if (!response.ok) {
@@ -189,18 +207,17 @@ export default function InstitutionRegistrationPage() {
         name: '',
         description: '',
         website: '',
-        address: '',
-        city: '',
-        state: '',
-        postalCode: '',
-        country: 'Madagascar',
         logo: null,
         logoPreview: '',
         brandColor: '',
-        contactPersonName: '',
-        contactPersonFirstName: '',
-        contactPersonEmail: '',
-        contactPersonPhone: ''
+        'account[firstName]': '',
+        'account[lastName]': '',
+        'account[email]': '',
+        'account[phoneNumber]': '',
+        'address[address]': '',
+        'address[city]': '',
+        'address[zipCode]': '',
+        'address[country]': 'Madagascar'
       })
       setCurrentStep(1)
       setErrors({})
@@ -356,54 +373,54 @@ export default function InstitutionRegistrationPage() {
               
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="contactPersonName">Nom de l'administrateur *</Label>
+                  <Label htmlFor="lastName">Nom de l'administrateur *</Label>
                   <Input
-                    id="contactPersonName"
-                    value={formData.contactPersonName}
-                    onChange={(e) => handleInputChange('contactPersonName', e.target.value)}
+                    id="lastName"
+                    value={formData['account[lastName]']}
+                    onChange={(e) => handleInputChange('account[lastName]', e.target.value)}
                     placeholder="Rakoto"
-                    className={`transition-all focus:ring-2 focus:ring-primary/20 ${errors.contactPersonName ? 'border-red-500 focus:border-red-500' : ''}`}
+                    className={`transition-all focus:ring-2 focus:ring-primary/20 ${errors['account[lastName]'] ? 'border-red-500 focus:border-red-500' : ''}`}
                   />
-                  {errors.contactPersonName && <p className="text-sm text-red-500">{errors.contactPersonName}</p>}
+                  {errors['account[lastName]'] && <p className="text-sm text-red-500">{errors['account[lastName]']}</p>}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="contactPersonFirstName">Prénom de l'administrateur *</Label>
+                  <Label htmlFor="firstName">Prénom de l'administrateur *</Label>
                   <Input
-                    id="contactPersonFirstName"
-                    value={formData.contactPersonFirstName}
-                    onChange={(e) => handleInputChange('contactPersonFirstName', e.target.value)}
+                    id="firstName"
+                    value={formData['account[firstName]']}
+                    onChange={(e) => handleInputChange('account[firstName]', e.target.value)}
                     placeholder="Jean"
-                    className={`transition-all focus:ring-2 focus:ring-primary/20 ${errors.contactPersonFirstName ? 'border-red-500 focus:border-red-500' : ''}`}
+                    className={`transition-all focus:ring-2 focus:ring-primary/20 ${errors['account[firstName]'] ? 'border-red-500 focus:border-red-500' : ''}`}
                   />
-                  {errors.contactPersonFirstName && <p className="text-sm text-red-500">{errors.contactPersonFirstName}</p>}
+                  {errors['account[firstName]'] && <p className="text-sm text-red-500">{errors['account[firstName]']}</p>}
                 </div>
               </div>
 
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 mt-4">
                 <div className="space-y-2">
-                  <Label htmlFor="contactPersonEmail">Email de connexion *</Label>
+                  <Label htmlFor="email">Email de connexion *</Label>
                   <Input
-                    id="contactPersonEmail"
+                    id="email"
                     type="email"
-                    value={formData.contactPersonEmail}
-                    onChange={(e) => handleInputChange('contactPersonEmail', e.target.value)}
+                    value={formData['account[email]']}
+                    onChange={(e) => handleInputChange('account[email]', e.target.value)}
                     placeholder="admin@institution.mg"
-                    className={`transition-all focus:ring-2 focus:ring-primary/20 ${errors.contactPersonEmail ? 'border-red-500 focus:border-red-500' : ''}`}
+                    className={`transition-all focus:ring-2 focus:ring-primary/20 ${errors['account[email]'] ? 'border-red-500 focus:border-red-500' : ''}`}
                   />
-                  {errors.contactPersonEmail && <p className="text-sm text-red-500">{errors.contactPersonEmail}</p>}
+                  {errors['account[email]'] && <p className="text-sm text-red-500">{errors['account[email]']}</p>}
                   <p className="text-xs text-muted-foreground">
                     Cette adresse email sera utilisée pour se connecter au système
                   </p>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="contactPersonPhone">Téléphone de contact</Label>
+                  <Label htmlFor="phoneNumber">Téléphone de contact</Label>
                   <Input
-                    id="contactPersonPhone"
+                    id="phoneNumber"
                     type="tel"
-                    value={formData.contactPersonPhone}
-                    onChange={(e) => handleInputChange('contactPersonPhone', e.target.value)}
+                    value={formData['account[phoneNumber]']}
+                    onChange={(e) => handleInputChange('account[phoneNumber]', e.target.value)}
                     placeholder="+261 34 12 345 67"
                     className="transition-all focus:ring-2 focus:ring-primary/20"
                   />
@@ -434,12 +451,12 @@ export default function InstitutionRegistrationPage() {
               <Label htmlFor="address">Adresse complète *</Label>
               <Textarea
                 id="address"
-                value={formData.address}
-                onChange={(e) => handleInputChange('address', e.target.value)}
+                value={formData['address[address]']}
+                onChange={(e) => handleInputChange('address[address]', e.target.value)}
                 placeholder="Lot II M 42 Ter, Ankatso, Antananarivo 101"
-                className={`min-h-[80px] transition-all focus:ring-2 focus:ring-primary/20 ${errors.address ? 'border-red-500 focus:border-red-500' : ''}`}
+                className={`min-h-[80px] transition-all focus:ring-2 focus:ring-primary/20 ${errors['address[address]'] ? 'border-red-500 focus:border-red-500' : ''}`}
               />
-              {errors.address && <p className="text-sm text-red-500">{errors.address}</p>}
+              {errors['address[address]'] && <p className="text-sm text-red-500">{errors['address[address]']}</p>}
             </div>
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -447,48 +464,35 @@ export default function InstitutionRegistrationPage() {
                 <Label htmlFor="city">Ville *</Label>
                 <Input
                   id="city"
-                  value={formData.city}
-                  onChange={(e) => handleInputChange('city', e.target.value)}
+                  value={formData['address[city]']}
+                  onChange={(e) => handleInputChange('address[city]', e.target.value)}
                   placeholder="Antananarivo"
-                  className={`transition-all focus:ring-2 focus:ring-primary/20 ${errors.city ? 'border-red-500 focus:border-red-500' : ''}`}
+                  className={`transition-all focus:ring-2 focus:ring-primary/20 ${errors['address[city]'] ? 'border-red-500 focus:border-red-500' : ''}`}
                 />
-                {errors.city && <p className="text-sm text-red-500">{errors.city}</p>}
+                {errors['address[city]'] && <p className="text-sm text-red-500">{errors['address[city]']}</p>}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="state">Province/Région</Label>
+                <Label htmlFor="zipCode">Code postal</Label>
                 <Input
-                  id="state"
-                  value={formData.state}
-                  onChange={(e) => handleInputChange('state', e.target.value)}
-                  placeholder="Analamanga"
+                  id="zipCode"
+                  value={formData['address[zipCode]']}
+                  onChange={(e) => handleInputChange('address[zipCode]', e.target.value)}
+                  placeholder="101"
                   className="transition-all focus:ring-2 focus:ring-primary/20"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="postalCode">Code postal</Label>
-                <Input
-                  id="postalCode"
-                  value={formData.postalCode}
-                  onChange={(e) => handleInputChange('postalCode', e.target.value)}
-                  placeholder="101"
-                  className="transition-all focus:ring-2 focus:ring-primary/20"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="country">Pays</Label>
-                <Input
-                  id="country"
-                  value={formData.country}
-                  onChange={(e) => handleInputChange('country', e.target.value)}
-                  placeholder="Madagascar"
-                  className="transition-all focus:ring-2 focus:ring-primary/20"
-                />
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="country">Pays</Label>
+              <Input
+                id="country"
+                value={formData['address[country]']}
+                onChange={(e) => handleInputChange('address[country]', e.target.value)}
+                placeholder="Madagascar"
+                className="transition-all focus:ring-2 focus:ring-primary/20"
+              />
             </div>
 
             {/* Submit Error */}
