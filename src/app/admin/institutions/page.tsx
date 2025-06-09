@@ -25,6 +25,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Skeleton } from "@/components/ui/skeleton"
 
 // Define columns
 const columns: ColumnDef<any>[] = [
@@ -175,7 +176,6 @@ export default function InstitutionsPage() {
 
   const handleDelete = (institution: any) => {
     console.log('Delete institution:', institution)
-    // }
   }
 
   const fetchInstitutions = async (pageNum: number, isInitial = false) => {
@@ -237,25 +237,6 @@ export default function InstitutionsPage() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [handleScroll])
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="animate-spin h-8 w-8 text-primary" />
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-center">
-        <div>
-          <AlertCircle className="h-6 w-6 text-destructive mx-auto mb-2" />
-          <p className="text-destructive">{error}</p>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className="min-h-screen p-6 space-y-6 bg-background">
       <Breadcrumb>
@@ -278,7 +259,10 @@ export default function InstitutionsPage() {
         <div>
           <h1 className="text-2xl font-bold text-primary">Établissements</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            {institutions.length} établissement{institutions.length > 1 ? 's' : ''} affiché{institutions.length > 1 ? 's' : ''}
+            {loading ? 
+              "Chargement..." : 
+              `${institutions.length} établissement${institutions.length > 1 ? 's' : ''} affiché${institutions.length > 1 ? 's' : ''}`
+            }
           </p>
         </div>
         <Button variant="default" className="gap-2">
@@ -287,21 +271,72 @@ export default function InstitutionsPage() {
         </Button>
       </div>
 
-      <DataTable columns={columns} data={institutions} />
-
-      {loadingMore && (
-        <div className="flex items-center justify-center py-8">
-          <Loader2 className="animate-spin h-6 w-6 text-primary mr-2" />
-          <span className="text-sm text-muted-foreground">Chargement...</span>
+{error ? (
+        <div className="flex items-center justify-center py-12 text-center">
+          <div>
+            <AlertCircle className="h-6 w-6 text-destructive mx-auto mb-2" />
+            <p className="text-destructive">{error}</p>
+          </div>
         </div>
-      )}
-
-      {!hasMore && institutions.length > 0 && (
-        <div className="flex items-center justify-center py-8">
-          <span className="text-sm text-muted-foreground">
-            Tous les établissements ont été chargés
-          </span>
+      ) : loading ? (
+        <div className="space-y-4">
+          {/* Table header skeleton */}
+          <div className="flex items-center justify-between py-4 border-b">
+            <div className="flex items-center space-x-4">
+              <Skeleton className="h-4 w-4 bg-gray-200" />
+              <Skeleton className="h-4 w-12 bg-gray-200" />
+              <Skeleton className="h-4 w-16 bg-gray-200" />
+              <Skeleton className="h-4 w-24 bg-gray-200" />
+              <Skeleton className="h-4 w-20 bg-gray-200" />
+              <Skeleton className="h-4 w-16 bg-gray-200" />
+              <Skeleton className="h-4 w-16 bg-gray-200" />
+              <Skeleton className="h-4 w-16 bg-gray-200" />
+            </div>
+          </div>
+          
+          {/* Table rows skeleton */}
+          {Array.from({ length: 8 }).map((_, index) => (
+            <div key={index} className="flex items-center space-x-4 py-4 border-b">
+              <Skeleton className="h-4 w-4 bg-gray-200" />
+              <Skeleton className="h-10 w-10 rounded-md bg-gray-200" />
+              <Skeleton className="h-4 w-24 bg-gray-200" />
+              <Skeleton className="h-4 w-48 bg-gray-200" />
+              <Skeleton className="h-4 w-32 bg-gray-200" />
+              <Skeleton className="h-4 w-20 bg-gray-200" />
+              <Skeleton className="h-4 w-16 bg-gray-200" />
+              <Skeleton className="h-8 w-8 bg-gray-200" />
+            </div>
+          ))}
         </div>
+      ) : (
+        <>
+          <DataTable columns={columns} data={institutions} />
+
+          {loadingMore && (
+            <div className="space-y-4 py-8">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <div key={index} className="flex items-center space-x-4 py-4 border-b">
+                  <Skeleton className="h-4 w-4 bg-gray-200" />
+                  <Skeleton className="h-10 w-10 rounded-md bg-gray-200" />
+                  <Skeleton className="h-4 w-24 bg-gray-200" />
+                  <Skeleton className="h-4 w-48 bg-gray-200" />
+                  <Skeleton className="h-4 w-32 bg-gray-200" />
+                  <Skeleton className="h-4 w-20 bg-gray-200" />
+                  <Skeleton className="h-4 w-16 bg-gray-200" />
+                  <Skeleton className="h-8 w-8 bg-gray-200" />
+                </div>
+              ))}
+            </div>
+          )}
+
+          {!hasMore && institutions.length > 0 && (
+            <div className="flex items-center justify-center py-8">
+              <span className="text-sm text-muted-foreground">
+                Tous les établissements ont été chargés
+              </span>
+            </div>
+          )}
+        </>
       )}
     </div>
   )
