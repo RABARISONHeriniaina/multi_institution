@@ -1,16 +1,15 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { useRouter } from 'next/navigation';
+import { useRouter, redirect } from 'next/navigation';
 
 
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2, Mail, Lock, Eye, EyeOff, Building2, ArrowRight, KeyRound, GraduationCap } from 'lucide-react'
-import { useIsAuthenticated } from '@/hooks/use-is-authenticated'
 
 interface LoginFormData {
   email: string
@@ -76,32 +75,41 @@ export default function LoginForm() {
     setErrors({})
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formData)
-      })
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(formData)
+        })
 
-      if (!response.ok) {
-        const errorData = await response.json()
-        setErrors({ submit: errorData.message || 'Identifiants invalides' })
-        return
-      }
+        if (!response.ok) {
+          const errorData = await response.json()
+          setErrors({ submit: errorData.message || 'Identifiants invalides' })
+          return
+        }
 
-      const { token, refresh_token } = await response.json()
+        const { token, refresh_token } = await response.json()
 
-      router.push('/dashboard')
+        localStorage.setItem('auth_token', token)
+        localStorage.setItem('auth_refresh_token', refresh_token)
 
-    } catch (error) {
-      setErrors({ submit: 'Erreur de connexion. Veuillez réessayer.' })
-    } finally {
-      setIsLoading(false)
+        window.location.href = '/admin/institutions'
+
+      } catch (error) {
+        setErrors({ submit: 'Erreur de connexion. Veuillez réessayer.' })
+      } finally {
+        setIsLoading(false)
+    }
+
   }
 
-
-  }
+  useEffect(() => {
+     const token = localStorage.getItem('auth_token')
+     if (token) {
+        window.location.href = '/admin/institutions'
+     }
+  }, [])
 
   const handleForgotPassword = async () => {
     
