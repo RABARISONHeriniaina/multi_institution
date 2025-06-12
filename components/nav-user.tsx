@@ -29,6 +29,14 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 
+
+import { 
+  getUserData, 
+  getInstitutionData, 
+  isAuthenticated,
+  clearAuthCookies
+} from "@/lib/cookies"
+
 export function NavUser({
   user,
 }: {
@@ -40,11 +48,8 @@ export function NavUser({
 }) {
   const { isMobile } = useSidebar()
 
-  // handle logout
   function handleLogout() {
-    localStorage.removeItem('auth_token')
-    localStorage.removeItem('auth_refresh_token')
-
+    clearAuthCookies();
     window.location.href = '/login'
   }
 
