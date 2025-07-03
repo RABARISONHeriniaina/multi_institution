@@ -152,7 +152,7 @@ export default function Institutions() {
         <div className="container mx-auto text-center">
           <h2 className="text-5xl font-bold mb-6 text-primary">Choisissez votre établissement</h2>
           <p className="text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
-            Sélectionnez parmi notre réseau d'écoles partenaires pour commencer votre processus d'inscription. 
+            Sélectionnez parmi notre réseau d&apos;écoles partenaires pour commencer votre processus d&apos;inscription. 
             Chaque école offre des programmes uniques et des opportunités pour la réussite des étudiants.
           </p>
           <div className="flex flex-wrap justify-center gap-6 mb-8">
@@ -182,7 +182,7 @@ export default function Institutions() {
               <School className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-foreground mb-2">Aucun établissement disponible</h3>
               <p className="text-muted-foreground">
-                Il n'y a actuellement aucun établissement disponible pour l'inscription.
+                Il n&apos;y a actuellement aucun établissement disponible pour l&apos;inscription.
               </p>
             </div>
           ) : (
@@ -251,7 +251,7 @@ export default function Institutions() {
                       </div>
                       <Link href={`/institutions/${institution.id}/register`} className="w-full">
                         <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground group-hover:bg-primary/90 transition-colors">
-                          S'inscrire à {institution.name}
+                          S&apos;inscrire à {institution.name}
                         </Button>
                       </Link>
                     </CardContent>
@@ -264,7 +264,7 @@ export default function Institutions() {
                 <div className="flex justify-center mt-8">
                   <div className="text-center">
                     <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-2" />
-                    <p className="text-sm text-muted-foreground">Chargement d'autres établissements...</p>
+                    <p className="text-sm text-muted-foreground">Chargement d&apos;autres établissements...</p>
                   </div>
                 </div>
               )}
@@ -288,7 +288,7 @@ export default function Institutions() {
           <div className="text-center mb-12">
             <h3 className="text-3xl font-bold mb-4 text-foreground">Pourquoi choisir notre plateforme ?</h3>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Nous rendons l'inscription scolaire simple, sécurisée et efficace pour les étudiants et les familles.
+              Nous rendons l&apos;inscription scolaire simple, sécurisée et efficace pour les étudiants et les familles.
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -298,7 +298,7 @@ export default function Institutions() {
                   <GraduationCap className="h-8 w-8 text-primary" />
                 </div>
                 <h4 className="text-xl font-semibold mb-2 text-foreground">Inscription facile</h4>
-                <p className="text-muted-foreground">Processus d'inscription simplifié avec un guide étape par étape</p>
+                <p className="text-muted-foreground">Processus d&apos;inscription simplifié avec un guide étape par étape</p>
               </CardContent>
             </Card>
             <Card className="text-center border-border shadow-sm bg-card hover:shadow-md transition-shadow duration-200">

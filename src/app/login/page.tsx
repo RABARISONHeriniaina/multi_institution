@@ -371,7 +371,7 @@ export default function LoginForm() {
                       className="w-full border-primary/30 text-primary hover:bg-primary/10 hover:border-primary/50"
                     >
                       <Building2 className="mr-2 h-4 w-4" />
-                      S'inscrire pour devenir notre partenaire
+                      S&apos;inscrire pour devenir notre partenaire
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   </div>
@@ -396,7 +396,7 @@ export default function LoginForm() {
                       className="w-full border-blue-300 dark:border-blue-700 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30 hover:border-blue-400 dark:hover:border-blue-600"
                     >
                       <GraduationCap className="mr-2 h-4 w-4" />
-                      S'inscrire en tant qu'étudiant
+                      S&apos;inscrire en tant qu&apos;étudiant
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   </div>
@@ -408,7 +408,7 @@ export default function LoginForm() {
               <p className="text-xs text-muted-foreground">
                 En vous connectant, vous acceptez nos{' '}
                 <button className="text-primary hover:text-primary/80 transition-colors">
-                  conditions d'utilisation
+                  conditions d&apos;utilisation
                 </button>{' '}
                 et notre{' '}
                 <button className="text-primary hover:text-primary/80 transition-colors">

@@ -241,7 +241,7 @@ export default function InstitutionRegistrationPage() {
         return (
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Nom de l'établissement *</Label>
+              <Label htmlFor="name">Nom de l&apos;établissement *</Label>
               <Input
                 id="name"
                 value={formData.name}
@@ -358,8 +358,8 @@ export default function InstitutionRegistrationPage() {
                 <div>
                   <h4 className="font-semibold text-foreground mb-1">Création du compte administrateur</h4>
                   <p className="text-sm text-muted-foreground">
-                    Ce compte permettra à l'administrateur de l'école de se connecter et de gérer l'établissement. 
-                    Les informations saisies serviront d'identifiants de connexion pour accéder au tableau de bord.
+                    Ce compte permettra à l&apos;administrateur de l&apos;école de se connecter et de gérer l&apos;établissement. 
+                    Les informations saisies serviront d&apos;identifiants de connexion pour accéder au tableau de bord.
                   </p>
                 </div>
               </div>
@@ -368,12 +368,12 @@ export default function InstitutionRegistrationPage() {
             <div className="rounded-lg bg-muted/30 p-4">
               <h4 className="mb-3 font-semibold text-foreground flex items-center gap-2">
                 <UserPlus className="h-4 w-4 text-primary" />
-                Informations de l'administrateur
+                Informations de l&apos;administrateur
               </h4>
               
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="lastName">Nom de l'administrateur *</Label>
+                  <Label htmlFor="lastName">Nom de l&apos;administrateur *</Label>
                   <Input
                     id="lastName"
                     value={formData['account[lastName]']}
@@ -385,7 +385,7 @@ export default function InstitutionRegistrationPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="firstName">Prénom de l'administrateur *</Label>
+                  <Label htmlFor="firstName">Prénom de l&apos;administrateur *</Label>
                   <Input
                     id="firstName"
                     value={formData['account[firstName]']}
@@ -436,7 +436,7 @@ export default function InstitutionRegistrationPage() {
                 <div>
                   <p className="text-sm text-blue-800">
                     <strong>Note importante :</strong> Un email de confirmation avec le mot de passe temporaire 
-                    sera envoyé à l'adresse indiquée. L'administrateur pourra modifier ce mot de passe lors de sa première connexion.
+                    sera envoyé à l&apos;adresse indiquée. L&apos;administrateur pourra modifier ce mot de passe lors de sa première connexion.
                   </p>
                 </div>
               </div>
@@ -612,7 +612,7 @@ export default function InstitutionRegistrationPage() {
                   ) : (
                     <>
                       <Building2 className="h-4 w-4" />
-                      Enregistrer l'établissement
+                      Enregistrer l&apos;établissement
                     </>
                   )}
                 </Button>

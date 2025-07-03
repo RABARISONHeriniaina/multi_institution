@@ -563,7 +563,7 @@ export default function StudentRegistrationPage() {
       <div className="flex min-h-screen items-center justify-center">
         <div className="flex items-center gap-2">
           <Loader2 className="h-6 w-6 animate-spin text-primary" />
-          <span>Chargement des informations de l'institution...</span>
+          <span>Chargement des informations de l&apos;institution...</span>
         </div>
       </div>
     )
@@ -597,7 +597,7 @@ export default function StudentRegistrationPage() {
 
           <h1 className="mb-2 text-3xl font-bold text-foreground">Inscription Étudiant</h1>
           <p className="text-muted-foreground">
-            Enregistrez-vous au sein de l'établissement : <strong className='text-primary'>{institution?.name}</strong>
+            Enregistrez-vous au sein de l&apos;établissement : <strong className='text-primary'>{institution?.name}</strong>
           </p>
           
           {/* Institution Details */}
@@ -712,7 +712,7 @@ export default function StudentRegistrationPage() {
                   ) : (
                     <>
                       <UserPlus className="h-4 w-4" />
-                      S'Inscrire
+                      S&apos;Inscrire
                     </>
                   )}
                 </Button>
